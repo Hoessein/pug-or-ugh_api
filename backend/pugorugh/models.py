@@ -3,19 +3,19 @@ from django.db import models
 
 
 class Dog(models.Model):
-    MALE = 'M'
-    FEMALE = 'F'
-    UNKNOWN = 'U'
+    MALE = 'm'
+    FEMALE = 'f'
+    UNKNOWN = 'u'
     GENDER_CHOICES = (
         (MALE, 'Male'),
         (FEMALE, 'Female'),
         (UNKNOWN, 'Unknown'),
     )
 
-    SMALL = 'S'
-    MEDIUM = 'M'
-    LARGE = 'L'
-    EXTRA_LARGE = 'XL'
+    SMALL = 's'
+    MEDIUM = 'm'
+    LARGE = 'l'
+    EXTRA_LARGE = 'xl'
     SIZE_CHOICES = (
         (SMALL, 'Small'),
         (MEDIUM, 'Medium'),
@@ -25,7 +25,7 @@ class Dog(models.Model):
 
     name = models.CharField(max_length=255)
     image_filename = models.CharField(max_length=255)
-    breed = models.CharField(max_length=255)
+    breed = models.CharField(max_length=255, default="")
     age = models.IntegerField()
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     size = models.CharField(max_length=2, choices=SIZE_CHOICES)
