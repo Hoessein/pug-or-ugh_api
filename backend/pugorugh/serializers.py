@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
+from . import models
+
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -16,3 +18,21 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
+
+
+class DogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Dog
+        fields = '__all__'
+
+
+class UserDogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserDog
+        fields = '__all__'
+
+
+class UserPrefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserPref
+        exclude = ('users',)
