@@ -35,4 +35,4 @@ class UserDogSerializer(serializers.ModelSerializer):
 class UserPrefSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.UserPref
-        exclude = ('users',)
+        exclude = ('user',)

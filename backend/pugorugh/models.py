@@ -37,14 +37,19 @@ class Dog(models.Model):
 class UserDog(models.Model):
     LIKED = 'l'
     DISLIKED = 'd'
+    UNDECIDED = 'u'
     STATUS_CHOICES = (
         (LIKED, 'Liked'),
         (DISLIKED, 'Disliked'),
+        (UNDECIDED, 'Undecided')
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     dog = models.ForeignKey(Dog, on_delete=models.CASCADE)
-    status = models.CharField(max_length=1, choices=STATUS_CHOICES)
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=UNDECIDED)
+
+    def __str__(self):
+        return self.dog.name
 
 
 class UserPref(models.Model):
@@ -84,3 +89,5 @@ class UserPref(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
