@@ -13,8 +13,7 @@ urlpatterns = format_suffix_patterns([
     url(r'^api/user/$', views.UserRegisterView.as_view(), name='register-user'),
     # url(r'^api/dog/(?P<pk>\d+)/liked/next/$', views.ListUndecidedDogs.as_view(), name='liked-dogs'),
     url(r'^api/user/preferences/$', views.UserPreferences.as_view(), name='user-detail'),
-    # url(r'^api/dog/(?P<pk>\d+)/liked/next/$', views.ListUndecidedDogs.as_view(), name='liked-dogs'),
-    url(r'^api/dog/(?P<pk>\d+)/undecided/next/$', views.ListDogs.as_view(), name='undecided-dogs'),
+    url(r'api/dog/(?P<pk>-\d+)/undecided/next/$', views.ShowMeSomethingPLeaseView.as_view(), name='undecided-dogs'),
     url(r'^favicon\.ico$',
         RedirectView.as_view(
             url='/static/icons/favicon.ico',

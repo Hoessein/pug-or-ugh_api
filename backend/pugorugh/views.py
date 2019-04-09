@@ -22,20 +22,14 @@ class UserPreferences(generics.RetrieveUpdateAPIView):
     queryset = models.UserPref.objects.all()
     serializer_class = serializers.UserPrefSerializer
 
-class ListDogs(generics.RetrieveUpdateAPIView):
-    queryset = models.Dog.objects.all()
+class ShowMeSomethingPLeaseView(generics.RetrieveUpdateAPIView):
+    # queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
 
     def get_object(self):
-        queryset = self.get_queryset()
-
-        if self.kwargs.get('pk') == -1:
-            dog = queryset.get(pk=1)
-        else:
-            dog = self.get_queryset().first()
-
-        return dog
-
+        queryset = models.Dog.objects.all().get(pk=1)
+        print("queryset = ",  queryset)
+        return queryset
 
 #kwargs.get is de pk die binnenkomt
 #get_object gets a single item
