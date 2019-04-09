@@ -22,19 +22,6 @@ class UserPreferences(generics.RetrieveUpdateAPIView):
     queryset = models.UserPref.objects.all()
     serializer_class = serializers.UserPrefSerializer
 
-    lookup_field = None
-
-    def get_object(self):
-        user = self.request.user
-
-        try:
-            user_pref = models.UserPref.objects.get(user_id=user.id)
-        except models.UserPref.DoesNotExist:
-            user_pref = models.UserPref.objects.create(user=user)
-
-        return user_pref
-
-
 class ListDogs(generics.RetrieveUpdateAPIView):
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
@@ -45,7 +32,7 @@ class ListDogs(generics.RetrieveUpdateAPIView):
         if self.kwargs.get('pk') == -1:
             dog = queryset.get(pk=1)
         else:
-            dog = self.get_queryset().latest()
+            dog = self.get_queryset().first()
 
         return dog
 
