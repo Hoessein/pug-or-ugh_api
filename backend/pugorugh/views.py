@@ -25,24 +25,84 @@ class UserPreferences(generics.RetrieveUpdateAPIView):
     serializer_class = serializers.UserPrefSerializer
 
 
-class NextDogView(generics.RetrieveUpdateAPIView):
+class NextUndecidedDogView(generics.RetrieveUpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
 
     def get_object(self):
-        # queryset = models.Dog.objects.get(pk=1)
-        # # print(self.queryset)
-        # pk = int(self.kwargs.get('pk'))
-        # pk += 1
-        # print(pk)
-        # return self.get_queryset().get_next_by_id()
+        current_pk = self.kwargs.get('pk')
+        undecided_dog = self.get_queryset().filter(pk__gt=current_pk, userdog__status=None).order_by('pk').first()
+        # print(self.kwargs.get('poep'))
+        return undecided_dog
 
 
-        p = self.kwargs.get('pk')
+class LikedDogsView(generics.RetrieveUpdateAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = models.Dog.objects.all()
+    serializer_class = serializers.DogSerializer
 
-        m = self.get_queryset().filter(pk__gt=p).order_by('pk').first()
-        return m
+    def get_object(self):
+        current_pk = int(self.kwargs.get('pk'))
+        return current_pk
+
+    def put(self, request, pk):
+        """Tries to update the UserDog object or returns 404"""
+        dog = self.get_object()
+        print(dog, "you this is the dog")
+        if dog:
+            liked_dogs = models.UserDog(status='l', dog_id=dog, user=self.request.user)
+            liked_dogs.save()
+            print(self.get_queryset().get(pk=dog))
+            dogg = self.get_queryset().get(pk=dog)
+            serializer = serializers.DogSerializer(dogg)
+            return Response(serializer.data)
+            # return Response(liked_dogs)
+
+
+class ListLikedDogsView(generics.RetrieveUpdateAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = models.Dog.objects.all()
+    serializer_class = serializers.DogSerializer
+
+    def get_object(self):
+        current_pk = self.kwargs.get('pk')
+        liked_dogs = self.get_queryset().filter(pk__gt=current_pk, userdog__status='l').order_by('pk').first()
+        return liked_dogs
+
+
+class DislikedDogsView(generics.RetrieveUpdateAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = models.Dog.objects.all()
+    serializer_class = serializers.DogSerializer
+
+    def get_object(self):
+        current_pk = int(self.kwargs.get('pk'))
+        return current_pk
+
+    def put(self, request, pk):
+        """Tries to update the UserDog object or returns 404"""
+        dog = self.get_object()
+        print(dog, "yo this is the dog")
+        if dog:
+            disliked_dogs = models.UserDog(status='d', dog_id=dog, user=self.request.user)
+            disliked_dogs.save()
+            print(self.get_queryset().get(pk=dog))
+            dogg = self.get_queryset().get(pk=dog)
+            serializer = serializers.DogSerializer(dogg)
+            return Response(serializer.data)
+            # return Response(liked_dogs)
+
+
+class ListDislikedDogsView(generics.RetrieveUpdateAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = models.Dog.objects.all()
+    serializer_class = serializers.DogSerializer
+
+    def get_object(self):
+        current_pk = self.kwargs.get('pk')
+        liked_dogs = self.get_queryset().filter(pk__gt=current_pk, userdog__status='d').order_by('pk').first()
+        return liked_dogs
 
         #kwargs.get is de pk die binnenkomt
 #get_object gets a single item
