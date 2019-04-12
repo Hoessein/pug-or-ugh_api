@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
+from django.db.models import Q
 
 
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
@@ -25,16 +26,39 @@ class UserPreferences(generics.RetrieveUpdateAPIView):
     serializer_class = serializers.UserPrefSerializer
 
 
-class NextUndecidedDogView(generics.RetrieveUpdateAPIView):
+class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
 
     def get_object(self):
         current_pk = self.kwargs.get('pk')
-        undecided_dog = self.get_queryset().filter(pk__gt=current_pk, userdog__status=None).order_by('pk').first()
-        # print(self.kwargs.get('poep'))
+        undecided_dog = self.get_queryset().filter(pk__gt=current_pk).exclude(
+            Q(userdog__status__contains='d') or Q(userdog__status__contains='l')).order_by('pk').first()
         return undecided_dog
+
+
+class UndecidedDogsView(generics.RetrieveUpdateAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = models.Dog.objects.all()
+    serializer_class = serializers.DogSerializer
+
+    def get_object(self):
+        current_pk = int(self.kwargs.get('pk'))
+        return current_pk
+
+    def put(self, request, pk):
+        """Tries to update the UserDog object or returns 404"""
+        dog = self.get_object()
+        print(dog, "you this is the dog")
+        if dog:
+            liked_dogs = models.UserDog(status='u', dog_id=dog, user=self.request.user)
+            liked_dogs.save()
+            print(self.get_queryset().get(pk=dog))
+            dogg = self.get_queryset().get(pk=dog)
+            serializer = serializers.DogSerializer(dogg)
+            return Response(serializer.data)
+            # return Response(liked_dogs)
 
 
 class LikedDogsView(generics.RetrieveUpdateAPIView):

@@ -14,8 +14,11 @@ urlpatterns = format_suffix_patterns([
     # url(r'^api/dog/(?P<pk>\d+)/liked/next/$', views.ListUndecidedDogs.as_view(), name='liked-dogs'),
     url(r'api/user/preferences/$', views.UserPreferences.as_view(), name='user-detail'),
 
-    url(r'api/dog/(?P<pk>-\d+)/undecided/next/$', views.NextUndecidedDogView.as_view(), name='undecided-dogs'),
-    url(r'api/dog/(?P<pk>\d+)/undecided/next/$', views.NextUndecidedDogView.as_view(), name='undecided-dogs'),
+    url(r'api/dog/(?P<pk>-\d+)/undecided/next/$', views.ListUndecidedDogsView.as_view(), name='undecided-dogs'),
+    url(r'api/dog/(?P<pk>\d+)/undecided/next/$', views.ListUndecidedDogsView.as_view(), name='undecided-dogs'),
+
+    url(r'api/dog/(?P<pk>-\d+)/undecided/$', views.UndecidedDogsView.as_view(), name='undecided-dog'),
+    url(r'api/dog/(?P<pk>\d+)/undecided/$', views.UndecidedDogsView.as_view(), name='undecided-dog'),
 
     url(r'api/dog/(?P<pk>-\d+)/liked/$', views.LikedDogsView.as_view(), name='like-dog'),
     url(r'api/dog/(?P<pk>\d+)/liked/$', views.LikedDogsView.as_view(), name='like-dog'),
