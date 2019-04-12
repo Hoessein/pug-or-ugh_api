@@ -6,6 +6,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.authentication import TokenAuthentication
+
 from django.db.models import Q
 
 
@@ -21,10 +23,29 @@ class UserRegisterView(CreateAPIView):
     serializer_class = serializers.UserSerializer
 
 
-class UserPreferences(generics.RetrieveUpdateAPIView):
+class UserPreferencesView(generics.RetrieveUpdateAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = models.UserPref.objects.all()
     serializer_class = serializers.UserPrefSerializer
 
+    def get_object(self):
+        try:
+            user_pref = self.get_queryset().get(user_id=self.request.user.pk)
+        except ObjectDoesNotExist:
+            user_pref = self.get_queryset().create(user_id=self.request.user.pk)
+        return user_pref
+
+    def put(self, request, *args, **kwargs):
+        user_pref = self.get_queryset().get(user_id=self.request.user.pk)
+
+        if request.method == 'PUT':
+            data = request.data
+            user_pref.age = data.get('age')
+            user_pref.gender = data.get('gender')
+            user_pref.size = data.get('size')
+            user_pref.save()
+        serializer = serializers.UserPrefSerializer(user_pref)
+        return Response(serializer.data)
 
 class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -33,8 +54,13 @@ class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         current_pk = self.kwargs.get('pk')
+        print(current_pk)
+        user_pref = models.UserPref.objects.get(user=self.request.user.pk)
         undecided_dog = self.get_queryset().filter(pk__gt=current_pk).exclude(
-            Q(userdog__status__contains='d') or Q(userdog__status__contains='l')).order_by('pk').first()
+            Q(userdog__status__contains='d') or Q(userdog__status__contains='l')).filter(
+            gender__in=user_pref.gender,
+            size__in=user_pref.size).order_by('pk').first()
+
         return undecided_dog
 
 
@@ -128,5 +154,5 @@ class ListDislikedDogsView(generics.RetrieveUpdateAPIView):
         liked_dogs = self.get_queryset().filter(pk__gt=current_pk, userdog__status='d').order_by('pk').first()
         return liked_dogs
 
-        #kwargs.get is de pk die binnenkomt
+#kwargs.get is de pk die binnenkomt
 #get_object gets a single item
