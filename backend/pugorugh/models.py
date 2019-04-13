@@ -71,21 +71,21 @@ class UserPref(models.Model):
         (FEMALE, 'Female'),
     )
 
-    SMALL = 's'
-    MEDIUM = 'm'
-    LARGE = 'l'
-    EXTRA_LARGE = 'xl'
-    SIZE_CHOICES = (
-        (SMALL, 'Small'),
-        (MEDIUM, 'Medium'),
-        (LARGE, 'Large'),
-        (EXTRA_LARGE, 'Extra Large'),
-    )
+    # SMALL = 's'
+    # MEDIUM = 'm'
+    # LARGE = 'l'
+    # EXTRA_LARGE = 'xl'
+    # SIZE_CHOICES = (
+    #     (SMALL, 'Small'),
+    #     (MEDIUM, 'Medium'),
+    #     (LARGE, 'Large'),
+    #     (EXTRA_LARGE, 'Extra Large'),
+    # )
 
     user = models.OneToOneField(User)
     age = models.CharField(max_length=1, choices=AGE_CHOICES)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    size = models.CharField(max_length=2, choices=SIZE_CHOICES)
+    size = models.CharField(max_length=2, default='s,m,l,xl')
 
     def __str__(self):
         return self.user.username

@@ -16,6 +16,22 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from . import serializers
 from . import models
 
+b = [x for x in range(0, 15)]
+y = [x for x in range(15, 35)]
+a = [x for x in range(35, 90)]
+s = [x for x in range(90, 9999)]
+
+
+def age_convert(user_pref_age):
+    if 'b' in user_pref_age:
+        return b
+    elif 'y' in user_pref_age:
+        return y
+    elif 'a' in user_pref_age:
+        return a
+    elif 's' in user_pref_age:
+        return s
+
 
 class UserRegisterView(CreateAPIView):
     permission_classes = (permissions.AllowAny,)
@@ -47,19 +63,32 @@ class UserPreferencesView(generics.RetrieveUpdateAPIView):
         serializer = serializers.UserPrefSerializer(user_pref)
         return Response(serializer.data)
 
+
 class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
 
     def get_object(self):
+
         current_pk = self.kwargs.get('pk')
         print(current_pk)
         user_pref = models.UserPref.objects.get(user=self.request.user.pk)
-        undecided_dog = self.get_queryset().filter(pk__gt=current_pk).exclude(
-            Q(userdog__status__contains='d') or Q(userdog__status__contains='l')).filter(
-            gender__in=user_pref.gender,
-            size__in=user_pref.size).order_by('pk').first()
+
+        age = self.get_queryset().filter(pk__gt=current_pk).first()
+        print(age.age)
+        # d = age_convert(age.age)
+
+
+
+        undecided_dog = self.get_queryset().filter(
+            pk__gt=current_pk,
+            size__in=user_pref.size.split(','),
+            age__in=age_convert(user_pref.age),
+            gender__in=user_pref.gender).exclude(
+            Q(userdog__status__contains='d') or Q(userdog__status__contains='l')).order_by(
+            'pk').first()
+
 
         return undecided_dog
 
