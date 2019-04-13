@@ -79,8 +79,6 @@ class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
         print(age.age)
         # d = age_convert(age.age)
 
-
-
         undecided_dog = self.get_queryset().filter(
             pk__gt=current_pk,
             size__in=user_pref.size.split(','),
