@@ -21,16 +21,20 @@ y = [x for x in range(15, 35)]
 a = [x for x in range(35, 90)]
 s = [x for x in range(90, 9999)]
 
+all_together = []
+
 
 def age_convert(user_pref_age):
     if 'b' in user_pref_age:
-        return b
-    elif 'y' in user_pref_age:
-        return y
-    elif 'a' in user_pref_age:
-        return a
-    elif 's' in user_pref_age:
-        return s
+        all_together.extend(b)
+    if 'y' in user_pref_age:
+        all_together.extend(y)
+    if 'a' in user_pref_age:
+        all_together.extend(a)
+    if 's' in user_pref_age:
+        all_together.extend(s)
+
+    return all_together
 
 
 class UserRegisterView(CreateAPIView):
@@ -70,23 +74,30 @@ class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
     serializer_class = serializers.DogSerializer
 
     def get_object(self):
-
         current_pk = self.kwargs.get('pk')
         print(current_pk)
         user_pref = models.UserPref.objects.get(user=self.request.user.pk)
 
-        age = self.get_queryset().filter(pk__gt=current_pk).first()
-        print(age.age)
+        # age = self.get_queryset().filter(pk__gt=current_pk).first()
+        # print(age.age)
         # d = age_convert(age.age)
+        #
+        # try:
+        #     user_pref = self.get_queryset().get(user_id=self.request.user.pk)
+        # except ObjectDoesNotExist:
+        #     user_pref = self.get_queryset().create(user_id=self.request.user.pk)
+        # return user_pref
 
-        undecided_dog = self.get_queryset().filter(
-            pk__gt=current_pk,
-            size__in=user_pref.size.split(','),
-            age__in=age_convert(user_pref.age),
-            gender__in=user_pref.gender).exclude(
-            Q(userdog__status__contains='d') or Q(userdog__status__contains='l')).order_by(
-            'pk').first()
-
+        try:
+            undecided_dog = self.get_queryset().filter(
+                pk__gt=current_pk,
+                size__in=user_pref.size.split(','),
+                age__in=age_convert(user_pref.age.split(',')),
+                gender__in=user_pref.gender).exclude(
+                Q(userdog__status__contains='d')).exclude(Q(userdog__status__contains='l')).order_by(
+                'pk').first()
+        except ObjectDoesNotExist:
+            raise Http404
 
         return undecided_dog
 
@@ -104,10 +115,18 @@ class UndecidedDogsView(generics.RetrieveUpdateAPIView):
         """Tries to update the UserDog object or returns 404"""
         dog = self.get_object()
         print(dog, "you this is the dog")
-        if dog:
-            liked_dogs = models.UserDog(status='u', dog_id=dog, user=self.request.user)
-            liked_dogs.save()
-            print(self.get_queryset().get(pk=dog))
+        # if dog:
+        #     liked_dogs = models.UserDog(status='u', dog_id=dog, user=self.request.user)
+        #     liked_dogs.save()
+        #     print(self.get_queryset().get(pk=dog))
+        try:
+            liked_dog = models.UserDog.objects.filter(dog_id=dog).get()
+            liked_dog.status = 'l'
+            liked_dog.save()
+        except ObjectDoesNotExist:
+            liked_dog = models.UserDog(status='l', dog_id=dog, user=self.request.user)
+            liked_dog.save()
+
             dogg = self.get_queryset().get(pk=dog)
             serializer = serializers.DogSerializer(dogg)
             return Response(serializer.data)
@@ -126,15 +145,27 @@ class LikedDogsView(generics.RetrieveUpdateAPIView):
     def put(self, request, pk):
         """Tries to update the UserDog object or returns 404"""
         dog = self.get_object()
-        print(dog, "you this is the dog")
-        if dog:
-            liked_dogs = models.UserDog(status='l', dog_id=dog, user=self.request.user)
-            liked_dogs.save()
-            print(self.get_queryset().get(pk=dog))
-            dogg = self.get_queryset().get(pk=dog)
-            serializer = serializers.DogSerializer(dogg)
-            return Response(serializer.data)
+        print(dog, "yo this is the dog")
+        # if dog:
+        #
+        #     liked_dog = models.UserDog(status='l', dog_id=dog, user=self.request.user)
+        #     liked_dog.save()
+        #     print(self.get_queryset().get(pk=dog))
+        #     dogg = self.get_queryset().get(pk=dog)
+        #     serializer = serializers.DogSerializer(dogg)
+        #     return Response(serializer.data)
             # return Response(liked_dogs)
+        try:
+            liked_dog = models.UserDog.objects.filter(dog_id=dog).get()
+            liked_dog.status = 'l'
+            liked_dog.save()
+        except ObjectDoesNotExist:
+            liked_dog = models.UserDog(status='l', dog_id=dog, user=self.request.user)
+            liked_dog.save()
+
+        dogg = self.get_queryset().get(pk=dog)
+        serializer = serializers.DogSerializer(dogg)
+        return Response(serializer.data)
 
 
 class ListLikedDogsView(generics.RetrieveUpdateAPIView):
@@ -161,14 +192,25 @@ class DislikedDogsView(generics.RetrieveUpdateAPIView):
         """Tries to update the UserDog object or returns 404"""
         dog = self.get_object()
         print(dog, "yo this is the dog")
-        if dog:
-            disliked_dogs = models.UserDog(status='d', dog_id=dog, user=self.request.user)
-            disliked_dogs.save()
-            print(self.get_queryset().get(pk=dog))
-            dogg = self.get_queryset().get(pk=dog)
-            serializer = serializers.DogSerializer(dogg)
-            return Response(serializer.data)
+        # if dog:
+        #     disliked_dogs = models.UserDog(status='d', dog_id=dog, user=self.request.user)
+        #     disliked_dogs.save()
+        #     print(self.get_queryset().get(pk=dog))
+        #     dogg = self.get_queryset().get(pk=dog)
+        #     serializer = serializers.DogSerializer(dogg)
+        #     return Response(serializer.data)
             # return Response(liked_dogs)
+        try:
+            disliked_dog = models.UserDog.objects.filter(dog_id=dog).get()
+            disliked_dog.status = 'd'
+            disliked_dog.save()
+        except ObjectDoesNotExist:
+            disliked_dog = models.UserDog(status='d', dog_id=dog, user=self.request.user)
+            disliked_dog.save()
+
+        dogg = self.get_queryset().get(pk=dog)
+        serializer = serializers.DogSerializer(dogg)
+        return Response(serializer.data)
 
 
 class ListDislikedDogsView(generics.RetrieveUpdateAPIView):

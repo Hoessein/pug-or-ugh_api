@@ -53,16 +53,16 @@ class UserDog(models.Model):
 
 
 class UserPref(models.Model):
-    BABY = 'b'
-    YOUNG = 'y'
-    ADULT = 'a'
-    SENIOR = 's'
-    AGE_CHOICES = (
-        (BABY, 'Baby'),
-        (YOUNG, 'Young'),
-        (ADULT, 'Adult'),
-        (SENIOR, 'Senior'),
-    )
+    # BABY = 'b'
+    # YOUNG = 'y'
+    # ADULT = 'a'
+    # SENIOR = 's'
+    # AGE_CHOICES = (
+    #     (BABY, 'Baby'),
+    #     (YOUNG, 'Young'),
+    #     (ADULT, 'Adult'),
+    #     (SENIOR, 'Senior'),
+    # )
 
     MALE = 'm'
     FEMALE = 'f'
@@ -83,7 +83,7 @@ class UserPref(models.Model):
     # )
 
     user = models.OneToOneField(User)
-    age = models.CharField(max_length=1, choices=AGE_CHOICES)
+    age = models.CharField(max_length=1, default='b,y,a,s')
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     size = models.CharField(max_length=2, default='s,m,l,xl')
 
