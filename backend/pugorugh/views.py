@@ -74,32 +74,25 @@ class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
     serializer_class = serializers.DogSerializer
 
     def get_object(self):
-        current_pk = self.kwargs.get('pk')
+        current_pk=self.kwargs.get('pk')
         print(current_pk)
         user_pref = models.UserPref.objects.get(user=self.request.user.pk)
 
-        # age = self.get_queryset().filter(pk__gt=current_pk).first()
-        # print(age.age)
-        # d = age_convert(age.age)
-        #
-        # try:
-        #     user_pref = self.get_queryset().get(user_id=self.request.user.pk)
-        # except ObjectDoesNotExist:
-        #     user_pref = self.get_queryset().create(user_id=self.request.user.pk)
-        # return user_pref
+        if not models.UserDog.objects.filter(user_id=self.request.user.pk):
+            return models.Dog.objects.filter(pk__gt=current_pk).order_by('pk').first()
+        else:
+            try:
+                undecided_dog = self.get_queryset().filter(
+                    pk__gt=current_pk,
+                    size__in=user_pref.size.split(','),
+                    age__in=age_convert(user_pref.age.split(',')),
+                    gender__in=user_pref.gender).exclude(
+                    Q(userdog__status__contains='d')).exclude(Q(userdog__status__contains='l')).order_by(
+                    'pk').first()
+            except ObjectDoesNotExist:
+                raise Http404
 
-        try:
-            undecided_dog = self.get_queryset().filter(
-                pk__gt=current_pk,
-                size__in=user_pref.size.split(','),
-                age__in=age_convert(user_pref.age.split(',')),
-                gender__in=user_pref.gender).exclude(
-                Q(userdog__status__contains='d')).exclude(Q(userdog__status__contains='l')).order_by(
-                'pk').first()
-        except ObjectDoesNotExist:
-            raise Http404
-
-        return undecided_dog
+            return undecided_dog
 
 
 class UndecidedDogsView(generics.RetrieveUpdateAPIView):
@@ -115,22 +108,18 @@ class UndecidedDogsView(generics.RetrieveUpdateAPIView):
         """Tries to update the UserDog object or returns 404"""
         dog = self.get_object()
         print(dog, "you this is the dog")
-        # if dog:
-        #     liked_dogs = models.UserDog(status='u', dog_id=dog, user=self.request.user)
-        #     liked_dogs.save()
-        #     print(self.get_queryset().get(pk=dog))
-        try:
-            liked_dog = models.UserDog.objects.filter(dog_id=dog).get()
-            liked_dog.status = 'l'
-            liked_dog.save()
-        except ObjectDoesNotExist:
-            liked_dog = models.UserDog(status='l', dog_id=dog, user=self.request.user)
-            liked_dog.save()
 
-            dogg = self.get_queryset().get(pk=dog)
-            serializer = serializers.DogSerializer(dogg)
-            return Response(serializer.data)
-            # return Response(liked_dogs)
+        try:
+            undecided_dog = models.UserDog.objects.filter(dog_id=dog, user=self.request.user).get()
+            undecided_dog.status = 'u'
+            undecided_dog.save()
+        except ObjectDoesNotExist:
+            undecided_dog = models.UserDog(status='u', dog_id=dog, user=self.request.user)
+            undecided_dog.save()
+
+        dogg = self.get_queryset().get(pk=dog)
+        serializer = serializers.DogSerializer(dogg)
+        return Response(serializer.data)
 
 
 class LikedDogsView(generics.RetrieveUpdateAPIView):
@@ -146,17 +135,8 @@ class LikedDogsView(generics.RetrieveUpdateAPIView):
         """Tries to update the UserDog object or returns 404"""
         dog = self.get_object()
         print(dog, "yo this is the dog")
-        # if dog:
-        #
-        #     liked_dog = models.UserDog(status='l', dog_id=dog, user=self.request.user)
-        #     liked_dog.save()
-        #     print(self.get_queryset().get(pk=dog))
-        #     dogg = self.get_queryset().get(pk=dog)
-        #     serializer = serializers.DogSerializer(dogg)
-        #     return Response(serializer.data)
-            # return Response(liked_dogs)
         try:
-            liked_dog = models.UserDog.objects.filter(dog_id=dog).get()
+            liked_dog = models.UserDog.objects.filter(dog_id=dog, user=self.request.user).get()
             liked_dog.status = 'l'
             liked_dog.save()
         except ObjectDoesNotExist:
@@ -175,7 +155,7 @@ class ListLikedDogsView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         current_pk = self.kwargs.get('pk')
-        liked_dogs = self.get_queryset().filter(pk__gt=current_pk, userdog__status='l').order_by('pk').first()
+        liked_dogs = self.get_queryset().filter(pk__gt=current_pk, userdog__status='l', userdog__user=self.request.user).order_by('pk').first()
         return liked_dogs
 
 
@@ -192,16 +172,8 @@ class DislikedDogsView(generics.RetrieveUpdateAPIView):
         """Tries to update the UserDog object or returns 404"""
         dog = self.get_object()
         print(dog, "yo this is the dog")
-        # if dog:
-        #     disliked_dogs = models.UserDog(status='d', dog_id=dog, user=self.request.user)
-        #     disliked_dogs.save()
-        #     print(self.get_queryset().get(pk=dog))
-        #     dogg = self.get_queryset().get(pk=dog)
-        #     serializer = serializers.DogSerializer(dogg)
-        #     return Response(serializer.data)
-            # return Response(liked_dogs)
         try:
-            disliked_dog = models.UserDog.objects.filter(dog_id=dog).get()
+            disliked_dog = models.UserDog.objects.filter(dog_id=dog, user=self.request.user).get()
             disliked_dog.status = 'd'
             disliked_dog.save()
         except ObjectDoesNotExist:
@@ -220,7 +192,7 @@ class ListDislikedDogsView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         current_pk = self.kwargs.get('pk')
-        liked_dogs = self.get_queryset().filter(pk__gt=current_pk, userdog__status='d').order_by('pk').first()
+        liked_dogs = self.get_queryset().filter(pk__gt=current_pk, userdog__status='d', userdog__user=self.request.user).order_by('pk').first()
         return liked_dogs
 
 #kwargs.get is de pk die binnenkomt
