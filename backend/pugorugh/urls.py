@@ -26,8 +26,8 @@ urlpatterns = format_suffix_patterns([
     url(r'api/dog/(?P<pk>-\d+)/liked/next/$', views.ListLikedDogsView.as_view(), name='liked-dogs'),
     url(r'api/dog/(?P<pk>\d+)/liked/next/$', views.ListLikedDogsView.as_view(), name='liked-dogs'),
 
-    url(r'api/dog/(?P<pk>-\d+)/disliked/$', views.DislikedDogsView.as_view(), name='disliked-dog'),
-    url(r'api/dog/(?P<pk>\d+)/disliked/$', views.DislikedDogsView.as_view(), name='disliked-dog'),
+    url(r'api/dog/(?P<pk>-\d+)/disliked/$', views.DislikedDogsView.as_view(), name='dislike-dog'),
+    url(r'api/dog/(?P<pk>\d+)/disliked/$', views.DislikedDogsView.as_view(), name='dislike-dog'),
 
     url(r'api/dog/(?P<pk>-\d+)/disliked/next/$', views.ListDislikedDogsView.as_view(), name='disliked-dogs'),
     url(r'api/dog/(?P<pk>\d+)/disliked/next/$', views.ListDislikedDogsView.as_view(), name='disliked-dogs'),
