@@ -2,6 +2,8 @@ import json
 from os import environ
 from os import path
 import sys
+import io
+
 
 import django
 
@@ -11,7 +13,7 @@ PROJ_DIR = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 def load_data():
     filepath = path.join(PROJ_DIR, 'pugorugh', 'static', 'dog_details.json')
     
-    with open(filepath, 'r', encoding='utf-8') as file:
+    with io.open(filepath, 'r', encoding='utf-8') as file:
         data = json.load(file)
 
         serializer = DogSerializer(data=data, many=True)

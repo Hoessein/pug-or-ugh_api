@@ -98,7 +98,7 @@ class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
                     size__in=user_pref.size.split(','),
                     age__in=age_convert(user_pref.age.split(',')),
                     gender__in=user_pref.gender).exclude(
-                    Q(userdog__status='l') & Q(userdog__status='d')).order_by('pk').first()
+                    Q(userdog__status='l')).exclude(Q(userdog__status='d')).order_by('pk').first()
             except ObjectDoesNotExist:
                 raise Http404
 

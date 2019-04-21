@@ -1,7 +1,5 @@
 from django.contrib.auth.models import User
 from django.db import models
-from django.db import IntegrityError
-
 
 class Dog(models.Model):
     MALE = 'm'
@@ -54,16 +52,6 @@ class UserDog(models.Model):
 
 
 class UserPref(models.Model):
-    # BABY = 'b'
-    # YOUNG = 'y'
-    # ADULT = 'a'
-    # SENIOR = 's'
-    # AGE_CHOICES = (
-    #     (BABY, 'Baby'),
-    #     (YOUNG, 'Young'),
-    #     (ADULT, 'Adult'),
-    #     (SENIOR, 'Senior'),
-    # )
 
     MALE = 'm'
     FEMALE = 'f'
@@ -71,17 +59,6 @@ class UserPref(models.Model):
         (MALE, 'Male'),
         (FEMALE, 'Female'),
     )
-
-    # SMALL = 's'
-    # MEDIUM = 'm'
-    # LARGE = 'l'
-    # EXTRA_LARGE = 'xl'
-    # SIZE_CHOICES = (
-    #     (SMALL, 'Small'),
-    #     (MEDIUM, 'Medium'),
-    #     (LARGE, 'Large'),
-    #     (EXTRA_LARGE, 'Extra Large'),
-    # )
 
     user = models.OneToOneField(User)
     age = models.CharField(max_length=1, default='b,y,a,s')
