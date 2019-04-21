@@ -4,9 +4,7 @@ from rest_framework import permissions
 from rest_framework import generics
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
-from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-from rest_framework.authentication import TokenAuthentication
 
 from django.db.models import Q
 
@@ -38,20 +36,24 @@ def age_convert(user_pref_age):
 
 
 class UserRegisterView(CreateAPIView):
+    """Allows users to create a new account"""
     permission_classes = (permissions.AllowAny,)
     model = get_user_model()
     serializer_class = serializers.UserSerializer
 
 
 class UserPreferencesView(generics.RetrieveUpdateAPIView):
+    """Allows users to filter dog preferences"""
     permission_classes = (permissions.IsAuthenticated,)
     queryset = models.UserPref.objects.all()
     serializer_class = serializers.UserPrefSerializer
 
     def get_object(self):
         try:
+            # if the users has preferences saved, it will get the current references
             user_pref = self.get_queryset().get(user_id=self.request.user.pk)
         except ObjectDoesNotExist:
+            # if the user has no preferences saved, it will create a new one
             user_pref = self.get_queryset().create(user_id=self.request.user.pk)
         return user_pref
 
@@ -59,6 +61,8 @@ class UserPreferencesView(generics.RetrieveUpdateAPIView):
         user_pref = self.get_queryset().get(user_id=self.request.user.pk)
 
         if request.method == 'PUT':
+            # if a put method comes in the preferences will get updated
+            # based on the form checkboxes.
             data = request.data
             user_pref.age = data.get('age')
             user_pref.gender = data.get('gender')
@@ -69,26 +73,32 @@ class UserPreferencesView(generics.RetrieveUpdateAPIView):
 
 
 class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
+    """Lists all the dogs who have no/undecided status one by one"""
     permission_classes = (permissions.IsAuthenticated,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
 
     def get_object(self):
         current_pk=self.kwargs.get('pk')
-        print(current_pk)
         user_pref = models.UserPref.objects.get(user=self.request.user.pk)
 
+        # if the logged in user has not liked/disliked dogs show them all the dogs based on their preferences
         if not models.UserDog.objects.filter(user_id=self.request.user.pk):
-            return models.Dog.objects.filter(pk__gt=current_pk).order_by('pk').first()
+            return models.Dog.objects.filter(
+                pk__gt=current_pk,
+                size__in=user_pref.size.split(','),
+                age__in=age_convert(user_pref.age.split(',')),
+                gender__in=user_pref.gender).order_by('pk').first()
+
+        # else filter the dogs based on their preferences and liked/disliked dogs
         else:
             try:
-                undecided_dog = self.get_queryset().filter(
+                undecided_dog = models.Dog.objects.all().filter(
                     pk__gt=current_pk,
                     size__in=user_pref.size.split(','),
                     age__in=age_convert(user_pref.age.split(',')),
                     gender__in=user_pref.gender).exclude(
-                    Q(userdog__status__contains='d')).exclude(Q(userdog__status__contains='l')).order_by(
-                    'pk').first()
+                    Q(userdog__status='l') & Q(userdog__status='d')).order_by('pk').first()
             except ObjectDoesNotExist:
                 raise Http404
 
@@ -96,6 +106,7 @@ class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
 
 
 class UndecidedDogsView(generics.RetrieveUpdateAPIView):
+    """Allows the user to update a dog with an undecided status"""
     permission_classes = (permissions.IsAuthenticated,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
@@ -105,14 +116,13 @@ class UndecidedDogsView(generics.RetrieveUpdateAPIView):
         return current_pk
 
     def put(self, request, pk):
-        """Tries to update the UserDog object or returns 404"""
         dog = self.get_object()
-        print(dog, "you this is the dog")
-
         try:
+            # Tries to update with an undecided status first if there is a dog available
             undecided_dog = models.UserDog.objects.filter(dog_id=dog, user=self.request.user).get()
             undecided_dog.status = 'u'
             undecided_dog.save()
+            # If the dog has no status a new one will be created with an undecided status
         except ObjectDoesNotExist:
             undecided_dog = models.UserDog(status='u', dog_id=dog, user=self.request.user)
             undecided_dog.save()
@@ -123,6 +133,7 @@ class UndecidedDogsView(generics.RetrieveUpdateAPIView):
 
 
 class LikedDogsView(generics.RetrieveUpdateAPIView):
+    """Allows the user to update a dog with a liked status"""
     permission_classes = (permissions.IsAuthenticated,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
@@ -132,13 +143,13 @@ class LikedDogsView(generics.RetrieveUpdateAPIView):
         return current_pk
 
     def put(self, request, pk):
-        """Tries to update the UserDog object or returns 404"""
         dog = self.get_object()
-        print(dog, "yo this is the dog")
         try:
+            # Tries to update with a liked status first if there is a dog available
             liked_dog = models.UserDog.objects.filter(dog_id=dog, user=self.request.user).get()
             liked_dog.status = 'l'
             liked_dog.save()
+            # If the dog has no status a new one will be created with a liked status
         except ObjectDoesNotExist:
             liked_dog = models.UserDog(status='l', dog_id=dog, user=self.request.user)
             liked_dog.save()
@@ -149,17 +160,22 @@ class LikedDogsView(generics.RetrieveUpdateAPIView):
 
 
 class ListLikedDogsView(generics.RetrieveUpdateAPIView):
+    """Lists all the dogs who have a liked status one by one"""
     permission_classes = (permissions.IsAuthenticated,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
 
     def get_object(self):
         current_pk = self.kwargs.get('pk')
-        liked_dogs = self.get_queryset().filter(pk__gt=current_pk, userdog__status='l', userdog__user=self.request.user).order_by('pk').first()
+        liked_dogs = self.get_queryset().filter(
+            pk__gt=current_pk,
+            userdog__status='l',
+            userdog__user=self.request.user).order_by('pk').first()
         return liked_dogs
 
 
 class DislikedDogsView(generics.RetrieveUpdateAPIView):
+    """Allows the user to update a dog with a disliked status"""
     permission_classes = (permissions.IsAuthenticated,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
@@ -169,13 +185,14 @@ class DislikedDogsView(generics.RetrieveUpdateAPIView):
         return current_pk
 
     def put(self, request, pk):
-        """Tries to update the UserDog object or returns 404"""
         dog = self.get_object()
         print(dog, "yo this is the dog")
         try:
+            # Tries to update with a disliked status first if there is a dog available
             disliked_dog = models.UserDog.objects.filter(dog_id=dog, user=self.request.user).get()
             disliked_dog.status = 'd'
             disliked_dog.save()
+            # If the dog has no status a new one will be created with a disliked status
         except ObjectDoesNotExist:
             disliked_dog = models.UserDog(status='d', dog_id=dog, user=self.request.user)
             disliked_dog.save()
@@ -186,14 +203,15 @@ class DislikedDogsView(generics.RetrieveUpdateAPIView):
 
 
 class ListDislikedDogsView(generics.RetrieveUpdateAPIView):
+    """Lists all the dogs who have a disliked status one by one"""
     permission_classes = (permissions.IsAuthenticated,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
 
     def get_object(self):
         current_pk = self.kwargs.get('pk')
-        liked_dogs = self.get_queryset().filter(pk__gt=current_pk, userdog__status='d', userdog__user=self.request.user).order_by('pk').first()
+        liked_dogs = self.get_queryset().filter(
+            pk__gt=current_pk,
+            userdog__status='d',
+            userdog__user=self.request.user).order_by('pk').first()
         return liked_dogs
-
-#kwargs.get is de pk die binnenkomt
-#get_object gets a single item

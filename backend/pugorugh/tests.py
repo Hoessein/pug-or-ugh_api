@@ -143,7 +143,6 @@ class ViewTest(TestCase):
         self.assertEqual(Dog.objects.count(), 1)
         self.assertEqual(UserDog.objects.filter(status='d').count(), 1)
 
-
     def test_undecided_dog_creation(self):
         factory = APIRequestFactory()
         request = factory.put(reverse('undecided-dog', kwargs={'pk': '1'}))
