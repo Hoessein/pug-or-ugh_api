@@ -186,7 +186,6 @@ class DislikedDogsView(generics.RetrieveUpdateAPIView):
 
     def put(self, request, pk):
         dog = self.get_object()
-        print(dog, "yo this is the dog")
         try:
             # Tries to update with a disliked status first if there is a dog available
             disliked_dog = models.UserDog.objects.filter(dog_id=dog, user=self.request.user).get()
