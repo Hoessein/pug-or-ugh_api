@@ -45,7 +45,7 @@ class UserDog(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # user_id
     dog = models.ForeignKey(Dog, on_delete=models.CASCADE)  # dog_id
-    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=UNDECIDED)
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=UNDECIDED,)
 
     def __str__(self):
         return self.dog.name

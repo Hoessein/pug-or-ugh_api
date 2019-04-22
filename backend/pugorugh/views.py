@@ -92,13 +92,16 @@ class ListUndecidedDogsView(generics.RetrieveUpdateAPIView):
 
         # else filter the dogs based on their preferences and liked/disliked dogs
         else:
+            print(current_pk)
             try:
                 undecided_dog = models.Dog.objects.all().filter(
                     pk__gt=current_pk,
                     size__in=user_pref.size.split(','),
                     age__in=age_convert(user_pref.age.split(',')),
                     gender__in=user_pref.gender).exclude(
-                    Q(userdog__status='l')).exclude(Q(userdog__status='d')).order_by('pk').first()
+                    Q(userdog__user=self.request.user, userdog__status='d')).exclude(
+                    Q(userdog__user=self.request.user, userdog__status='l')).order_by(
+                    'pk').first()
             except ObjectDoesNotExist:
                 raise Http404
 
