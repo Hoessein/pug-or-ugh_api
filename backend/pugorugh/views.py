@@ -122,12 +122,12 @@ class UndecidedDogsView(generics.RetrieveUpdateAPIView):
         dog = self.get_object()
         try:
             # Tries to update with an undecided status first if there is a dog available
-            undecided_dog = models.UserDog.objects.filter(dog_id=dog, user=self.request.user).get()
+            undecided_dog = models.UserDog.objects.filter(dog_id=dog, user_id=self.request.user.pk).get()
             undecided_dog.status = 'u'
             undecided_dog.save()
             # If the dog has no status a new one will be created with an undecided status
         except ObjectDoesNotExist:
-            undecided_dog = models.UserDog(status='u', dog_id=dog, user=self.request.user)
+            undecided_dog = models.UserDog(status='u', dog_id=dog, user_id=self.request.user.pk)
             undecided_dog.save()
 
         dogg = self.get_queryset().get(pk=dog)
@@ -149,12 +149,12 @@ class LikedDogsView(generics.RetrieveUpdateAPIView):
         dog = self.get_object()
         try:
             # Tries to update with a liked status first if there is a dog available
-            liked_dog = models.UserDog.objects.filter(dog_id=dog, user=self.request.user).get()
+            liked_dog = models.UserDog.objects.filter(dog_id=dog, user_id=self.request.user.pk).get()
             liked_dog.status = 'l'
             liked_dog.save()
             # If the dog has no status a new one will be created with a liked status
         except ObjectDoesNotExist:
-            liked_dog = models.UserDog(status='l', dog_id=dog, user=self.request.user)
+            liked_dog = models.UserDog(status='l', dog_id=dog, user_id=self.request.user.pk)
             liked_dog.save()
 
         dogg = self.get_queryset().get(pk=dog)
@@ -191,12 +191,12 @@ class DislikedDogsView(generics.RetrieveUpdateAPIView):
         dog = self.get_object()
         try:
             # Tries to update with a disliked status first if there is a dog available
-            disliked_dog = models.UserDog.objects.filter(dog_id=dog, user=self.request.user).get()
+            disliked_dog = models.UserDog.objects.filter(dog_id=dog, user_id=self.request.user.pk).get()
             disliked_dog.status = 'd'
             disliked_dog.save()
             # If the dog has no status a new one will be created with a disliked status
         except ObjectDoesNotExist:
-            disliked_dog = models.UserDog(status='d', dog_id=dog, user=self.request.user)
+            disliked_dog = models.UserDog(status='d', dog_id=dog, user_id=self.request.user.pk)
             disliked_dog.save()
 
         dogg = self.get_queryset().get(pk=dog)
